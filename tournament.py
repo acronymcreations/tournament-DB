@@ -9,8 +9,13 @@ import bleach
 
 def connect(f,*args):
     def new_connection(*args):
+    	"""Connects to the database and creates a cursor.  The coursor is
+    	then passed to the function it decorates.  After the function call,
+    	all changes are commited to the database and the connection is
+    	closed."""
         db = psycopg2.connect("dbname=tournament")
-        result = f(db,*args)
+        c = db.cursor()
+        result = f(c,*args)
         db.commit()
         db.close()
         return result
@@ -18,31 +23,28 @@ def connect(f,*args):
 
 
 @connect
-def deleteMatches(db):
+def deleteMatches(c):
     """Remove all the match records from the database."""
-    c = db.cursor()
     c.execute("TRUNCATE matches")
     c.execute("Update players set wins = 0, matches = 0")
 
 
 @connect
-def deletePlayers(db):
+def deletePlayers(c):
     """Remove all the player records from the database."""
-    c = db.cursor()
     c.execute("TRUNCATE players")
 
 
 @connect
-def countPlayers(db):
+def countPlayers(c):
     """Returns the number of players currently registered."""
-    c = db.cursor()
     c.execute("select count(*) from players")
     result = c.fetchone()
     return result[0]
 
 
 @connect
-def registerPlayer(db,name):
+def registerPlayer(c,name):
     """Adds a player to the tournament database.
   
     The database assigns a unique serial id number for the player.  (This
@@ -51,12 +53,11 @@ def registerPlayer(db,name):
     Args:
       name: the player's full name (need not be unique).
     """
-    c = db.cursor()
     c.execute("Insert into players (name,wins,matches) Values (%s,0,0)",(bleach.clean(name),))
 
 
 @connect
-def playerStandings(db):
+def playerStandings(c):
     """Returns a list of the players and their win records, sorted by wins.
 
     The first entry in the list should be the player in first place, or a player
@@ -69,29 +70,26 @@ def playerStandings(db):
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    c = db.cursor()
     c.execute("Select * from players order by wins desc")
     results = c.fetchall()
     return results
 
 
 @connect
-def reportMatch(db, winner, loser):
+def reportMatch(c, winner, loser):
     """Records the outcome of a single match between two players.
 
     Args:
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
-    c = db.cursor()
     c.execute("Update players set wins = wins + 1, matches = matches + 1 where id = %s",(bleach.clean(winner),))
     c.execute("Update players set matches = matches + 1 where id = %s",(bleach.clean(loser),))
     c.execute("Insert into matches (winner,loser) Values (%s,%s)",((bleach.clean(winner),),(bleach.clean(loser),)))
 
 
 @connect
-def havePlayed(db,id1,id2):
-    c = db.cursor()
+def havePlayed(c,id1,id2):
     command = "Select * from matches where winner = %s and loser = %s or winner = %s and loser = %s" % (id1,id2,id2,id1)
     c.execute(command)
     if c.fetchone():
@@ -101,7 +99,7 @@ def havePlayed(db,id1,id2):
 
  
 @connect
-def swissPairings(db):
+def swissPairings(c):
     """Returns a list of pairs of players for the next round of a match.
   
     Assuming that there are an even number of players registered, each player
@@ -116,7 +114,6 @@ def swissPairings(db):
         id2: the second player's unique id
         name2: the second player's name
     """
-    c = db.cursor()
     c.execute("Select * from players order by wins desc, matches desc, id asc")
     results = c.fetchall()
     black = []
@@ -139,25 +136,6 @@ def swissPairings(db):
     
     
 
-
-
-# registerPlayer('John')
-# registerPlayer('Jack')
-# registerPlayer('Bill')
-# registerPlayer('Matt')
-
-# num = countPlayers()
-# print 'from main ',num
-# deletePlayers()
-# countPlayers()
-# reportMatch(14,15)
-# reportMatch(16,17)
-# reportMatch(14,16)
-# reportMatch(15,17)
-# playerStandings()
-print swissPairings()
-# havePlayed(103, 102)
-# havePlayed(102, 104)
 
 
 
