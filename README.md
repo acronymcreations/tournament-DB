@@ -33,6 +33,6 @@ at the end of each round so that the information is available to use when genera
 
 - `havePlayed(playerID, playerID)` This method can be used to see if to opponents have competed against each other already.
 
-- `'deletePlayers()' This method will delete all registered players.  This should only be used at the end of the tournament.
+- `deletePlayers()` This method will delete all registered players.  This should only be used at the end of the tournament.
 
 - `deleteMatches()` This method will delete all recorded match data.  This should only be used at the end of the tournament.
