@@ -88,6 +88,17 @@ def reportMatch(db, winner, loser):
     c.execute("Update players set matches = matches + 1 where id = %s",(bleach.clean(loser),))
     c.execute("Insert into matches (winner,loser) Values (%s,%s)",((bleach.clean(winner),),(bleach.clean(loser),)))
 
+
+@connect
+def havePlayed(db,id1,id2):
+    c = db.cursor()
+    command = "Select * from matches where winner = %s and loser = %s or winner = %s and loser = %s" % (id1,id2,id2,id1)
+    c.execute(command)
+    if c.fetchone():
+        return True
+    else:
+        return False
+
  
 @connect
 def swissPairings(db):
@@ -108,20 +119,25 @@ def swissPairings(db):
     c = db.cursor()
     c.execute("Select * from players order by wins desc, matches desc, id asc")
     results = c.fetchall()
-    c.execute("Select * from matches")
-    matches = c.fetchall()
-    print matches
-    pairings = []
-    for r in range(0,len(results),2):
-        pair = (results[r][0],results[r][1],results[r+1][0],results[r+1][1])
-        pairings.append(pair)
+    black = []
+    white = []
+    for r in results[::2]:
+    	black.append(r)
+    for r in results[1::2]:
+    	white.append(r)
+    for i in range(0,len(black),1):
+    	if havePlayed(black[i][0],white[i][0]):
+    		if i == len(black)-1:
+    			white[i],white[i-1] = white[i-1],white[i]
+    		else:
+    			white[i],white[i+1] = white[i+1],white[i]
+    zipped = zip([x[0] for x in black],[x[1] for x in black],[x[0] for x in white],[x[1] for x in white])
+    return zipped
 
-    for p in pairings:
-        for m in matches:
-            if (p[0],p[2]) == m or (p[2],p[0]) == m:
-                # do something
 
-    # return pairings
+
+    
+    
 
 
 
@@ -139,8 +155,9 @@ def swissPairings(db):
 # reportMatch(14,16)
 # reportMatch(15,17)
 # playerStandings()
-swissPairings()
-
+print swissPairings()
+# havePlayed(103, 102)
+# havePlayed(102, 104)
 
 
 
