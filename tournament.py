@@ -86,10 +86,11 @@ def reportMatch(db, winner, loser):
     c = db.cursor()
     c.execute("Update players set wins = wins + 1, matches = matches + 1 where id = %s",(bleach.clean(winner),))
     c.execute("Update players set matches = matches + 1 where id = %s",(bleach.clean(loser),))
+    c.execute("Insert into matches (winner,loser) Values (%s,%s)",((bleach.clean(winner),),(bleach.clean(loser),)))
 
  
- 
-def swissPairings():
+@connect
+def swissPairings(db):
     """Returns a list of pairs of players for the next round of a match.
   
     Assuming that there are an even number of players registered, each player
@@ -104,6 +105,25 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
+    c = db.cursor()
+    c.execute("Select * from players order by wins desc, matches desc, id asc")
+    results = c.fetchall()
+    c.execute("Select * from matches")
+    matches = c.fetchall()
+    print matches
+    pairings = []
+    for r in range(0,len(results),2):
+        pair = (results[r][0],results[r][1],results[r+1][0],results[r+1][1])
+        pairings.append(pair)
+
+    for p in pairings:
+        for m in matches:
+            if (p[0],p[2]) == m or (p[2],p[0]) == m:
+                # do something
+
+    # return pairings
+
+
 
 # registerPlayer('John')
 # registerPlayer('Jack')
@@ -119,6 +139,7 @@ def swissPairings():
 # reportMatch(14,16)
 # reportMatch(15,17)
 # playerStandings()
+swissPairings()
 
 
 
