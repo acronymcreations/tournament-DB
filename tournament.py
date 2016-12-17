@@ -4,10 +4,11 @@
 #
 
 import psycopg2
-import bleach
+from functools import wraps
 
 
 def connect(f, *args):
+    @wraps(f)
     def new_connection(*args):
         """Connects to the database and creates a cursor.  The coursor is
         then passed to the function it decorates.  After the function call,
@@ -25,14 +26,13 @@ def connect(f, *args):
 @connect
 def deleteMatches(c):
     """Remove all the match records from the database."""
-    c.execute("TRUNCATE matches")
-    c.execute("Update players set wins = 0, matches = 0")
+    c.execute("TRUNCATE matches cascade")
 
 
 @connect
 def deletePlayers(c):
     """Remove all the player records from the database."""
-    c.execute("TRUNCATE players")
+    c.execute("TRUNCATE players cascade")
 
 
 @connect
@@ -53,8 +53,8 @@ def registerPlayer(c, name):
     Args:
       name: the player's full name (need not be unique).
     """
-    c.execute("Insert into players (name,wins,matches) Values (%s,0,0)",
-              (bleach.clean(name),))
+    c.execute("Insert into players (name) Values (%s)",
+              (name,))
 
 
 @connect
@@ -71,7 +71,17 @@ def playerStandings(c):
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    c.execute("Select * from players order by wins desc")
+    command = """
+              select players.*,
+              (select count(*) from matches
+              where matches.winner = players.id) as wins,
+              (select count(*) from matches
+              where matches.loser = players.id
+              or matches.winner = players.id) as loses
+              from players
+              order by wins;
+              """
+    c.execute(command)
     results = c.fetchall()
     return results
 
@@ -84,13 +94,8 @@ def reportMatch(c, winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
-    c.execute("Update players set wins = wins + 1, ' \
-              'matches = matches + 1 where id = %s",
-              (bleach.clean(winner),))
-    c.execute("Update players set matches = matches + 1 where id = %s",
-              (bleach.clean(loser),))
     c.execute("Insert into matches (winner,loser) Values (%s,%s)",
-              ((bleach.clean(winner),), (bleach.clean(loser),)))
+              ((winner,), (loser,)))
 
 
 @connect
@@ -107,8 +112,8 @@ def havePlayed(c, id1, id2):
       False if they have not.
 
     """
-    command = "Select * from matches where winner = %s and ' \
-              'loser = %s or winner = %s and loser = %s" % (id1, id2, id2, id1)
+    command = "Select * from matches where winner = %s and " \
+        "loser = %s or winner = %s and loser = %s" % (id1, id2, id2, id1)
     c.execute(command)
     if c.fetchone():
         return True
@@ -132,8 +137,7 @@ def swissPairings(c):
         id2: the second player's unique id
         name2: the second player's name
     """
-    c.execute("Select * from players order by wins desc, matches desc, id asc")
-    results = c.fetchall()
+    results = playerStandings()
     black = []
     white = []
     for r in results[::2]:
@@ -151,3 +155,21 @@ def swissPairings(c):
                  [x[0] for x in white],
                  [x[1] for x in white])
     return zipped
+
+
+
+
+
+# registerPlayer("Bruno Walton")
+# registerPlayer("Boots O'Neal")
+# registerPlayer("Cathy Burton")
+# registerPlayer("Diane Grant")
+
+# reportMatch(262,263)
+# reportMatch(264,265)
+# reportMatch(262,264)
+# reportMatch(265,263)
+
+
+
+

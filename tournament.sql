@@ -8,13 +8,11 @@
 CREATE TABLE players ( 
 	id SERIAL PRIMARY KEY,
 	name TEXT,
-	wins INT,
-	matches INT
  );
 
 CREATE TABLE matches(
-	winner INT,
-	loser INT
+	winner INT REFERENCES players(id),
+	loser INT REFERENCES players(id)
 );
 
 

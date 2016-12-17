@@ -6,11 +6,18 @@ This is a python code that connects to a PostgreSQL database to manage a Swiss S
 You can add an unlimited number of players/teams to the tournament, and the database will manage
 pairing opponents of equal skill based on the performance of each player/team in previous rounds.
 
-## Imports
+## Running the Database
 
-`psycopg2` Required import to connect to the database
+1. First you must create your database and tables.  Do this by using the terminal command `CREATE DATABASE tournament`
 
-`bleach` Used to sterilize all user input
+2. Once your database has been created, connect to it using `psql -d tournament`
+
+3. Once connected, create your tables using `\i tournament.sql`
+
+4. To check that everything is set up correctly, disconnect from the database with `\q` and then run they tournament testfile included 
+using `python tournament_test.py`
+
+5. If everything is setup correctly, you should see a checklist testing each of the functions below followed by 'Success!  All tests pass!'
 
 ## Using the Database
 
