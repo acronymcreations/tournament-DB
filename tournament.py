@@ -77,9 +77,9 @@ def playerStandings(c):
               where matches.winner = players.id) as wins,
               (select count(*) from matches
               where matches.loser = players.id
-              or matches.winner = players.id) as loses
+              or matches.winner = players.id) as matches
               from players
-              order by wins;
+              order by wins desc;
               """
     c.execute(command)
     results = c.fetchall()
@@ -95,7 +95,7 @@ def reportMatch(c, winner, loser):
       loser:  the id number of the player who lost
     """
     c.execute("Insert into matches (winner,loser) Values (%s,%s)",
-              ((winner,), (loser,)))
+              (winner, loser))
 
 
 @connect
@@ -155,21 +155,3 @@ def swissPairings(c):
                  [x[0] for x in white],
                  [x[1] for x in white])
     return zipped
-
-
-
-
-
-# registerPlayer("Bruno Walton")
-# registerPlayer("Boots O'Neal")
-# registerPlayer("Cathy Burton")
-# registerPlayer("Diane Grant")
-
-# reportMatch(262,263)
-# reportMatch(264,265)
-# reportMatch(262,264)
-# reportMatch(265,263)
-
-
-
-

@@ -8,16 +8,14 @@ pairing opponents of equal skill based on the performance of each player/team in
 
 ## Running the Database
 
-1. First you must create your database and tables.  Do this by using the terminal command `CREATE DATABASE tournament`
+1. First you must connect to the database using the command `psql`
 
-2. Once your database has been created, connect to it using `psql -d tournament`
+2. Once connected, simply run `\i tournament.sql` to create your database and all required tables
 
-3. Once connected, create your tables using `\i tournament.sql`
-
-4. To check that everything is set up correctly, disconnect from the database with `\q` and then run they tournament testfile included 
+3. To check that everything is set up correctly, disconnect from the database with `\q` and then run they tournament testfile included 
 using `python tournament_test.py`
 
-5. If everything is setup correctly, you should see a checklist testing each of the functions below followed by 'Success!  All tests pass!'
+4. If everything is setup correctly, you should see a checklist testing each of the functions below followed by 'Success!  All tests pass!'
 
 ## Using the Database
 
